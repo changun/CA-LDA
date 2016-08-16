@@ -4,12 +4,27 @@
 * Trained models are available for download:
   * [200 dimensional](https://s3.amazonaws.com/newsfie/CA_LDA_dim_200.bin.gz)
   * [500 dimensional](https://s3.amazonaws.com/newsfie/CA_LDA_dim_500.bin.gz)
-* [Demo app](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java)
+ 
+### Usage
+#### Preprocessing
+* Create preprocessing ```Pipe```. 
+  * The pipe structure needs to be exactly the same as the one used when training the model (See [example](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java#L24).)
+* Put raw documents into an ```InstanceList``` throuhg the pipe (See [example](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java#L81).)
+
+#### Inference
+* Load the model using ```ObjectStreamInput.readObject()```
+* Call ```model.getInferencer(contextName)``` to get a ```TopicInferencer``` for a specific context.
+* Infer the topic distribution by calling ```inferencer.getSampledDistribution(instance, 100, 1, 5)```.
+* The function returns a ```dobule[]``` of length **K+1** which consists of the distribution of each **K** topic plus the proportion of the background words (which is the last element of the array).
+  * Usually, we discard the background proportion and only use the K-dimentional topic distribution to estimate the document similarity
+
+#### Demo
+* For details, please see [Demo App](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java)
 
   ```bash
   java -classpath [CLASSES_LOCATION] cc.mallet.examples.RunContextAwareLDA [MODEL_FILE] [DOCUMENT] [CONTEXT_NAME]
   ```
-  * Sample result from inferring topics in one of the EnronSent document (using Mail context)
+  * Sample result from inferring topics in one of the EnronSent document (using *Mail* context)
   ``` bash
   > java -classpath CALDA.jar cc.mallet.examples.RunContextAwareLDA CA_LDA_dim_500.bin.gz enronsent04 Mail
   
