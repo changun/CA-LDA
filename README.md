@@ -7,7 +7,7 @@
 * [Demo app](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java)
 
   ```bash
-  java -classpath [CLASSES_LOCATION] cc.mallet.examples.RunContextAwareLDA [MODEL_FILE_LOCATION] [DOCUMENT_LOCATION] [CONTEXT_NAME]
+  java -classpath [CLASSES_LOCATION] cc.mallet.examples.RunContextAwareLDA [MODEL_FILE] [DOCUMENT] [CONTEXT_NAME]
   ```
   * Sample result from inferring topics in one of the EnronSent document (using Mail context)
   ``` bash
