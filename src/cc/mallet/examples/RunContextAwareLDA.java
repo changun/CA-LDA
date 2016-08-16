@@ -7,14 +7,10 @@ import cc.mallet.types.Alphabet;
 import cc.mallet.types.IDSorter;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
-import cc.mallet.util.ArrayUtils;
 import cc.mallet.util.IoUtils;
-import sun.nio.ch.IOUtil;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
