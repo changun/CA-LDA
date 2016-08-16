@@ -12,18 +12,33 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * MultiBackgroundTopicModel (a.k.a Context-Aware LDA or CA-LDA)
+ * CA-LDA is designed to analyze corpus with documents from multiple sources. It assumes all the documents,
+ * disregarding their source, share a same set of global topics while each source individually has a background
+ * topic that captures the high-frequent but less-topical-relevant terms that occur in the documents of that source.
+ * E.g. common background words in email are: "schedule", "meeting", in social media posts are: "love", "video",
+ * "like", etc.
+ *
+ * The goal of CA-LDA is to distinguish the topical words from the backgrounds words so that the resulting document
+ * topic distribution is more focused on the actual topics of the document (rather than influenced by the background
+ * words).
+ *
+ * The source of a document is determined by the return value of the instance.getSource() function.
+ *
+ * In addition to LDA's parameters, CA-LDA has the following additional parameters:
+ *
+ * double betaBackground: the Dirichlet prior of the vocabulary distribution of background topics
+ * double lambda: the prior probability of the proportion of the background words in a doc
+ *
+ * When getting a TopicInferencer from a pre-trained model, you will need to specify the source of the
+ * documents to which the Inferencer will be applied so that the corresponding background topic will be used.
+ *
+ *
  * Created by Cheng-Kang Hsieh on 9/13/15.
  */
 public class MultiBackgroundTopicModel extends BackgroundTopicModel {
     static final long serialVersionUID = -816987635771455958L;
 
-    public Map<Object, Integer> getSourceToSourceId() {
-        return sourceToSourceId;
-    }
-
-    public List<ArrayList<TopicAssignment>> getDataBySourceId() {
-        return dataBySourceId;
-    }
 
     Map<Object, Integer> sourceToSourceId = new HashMap<Object, Integer>();
     List<ArrayList<TopicAssignment>> dataBySourceId = new ArrayList<ArrayList<TopicAssignment>>();
@@ -35,6 +50,7 @@ public class MultiBackgroundTopicModel extends BackgroundTopicModel {
     public MultiBackgroundTopicModel(LabelAlphabet topicAlphabet, double alphaSum, double beta, double betaBackground, double lambda) {
         super(topicAlphabet, alphaSum, beta, betaBackground, lambda);
     }
+
     public MultiBackgroundTopicModel (int numberOfTopics) {
         this (numberOfTopics, 1, DEFAULT_BETA, DEFAULT_BETA, DEFAULT_LAMBDA);
     }
@@ -106,12 +122,16 @@ public class MultiBackgroundTopicModel extends BackgroundTopicModel {
 
             int[] topics = topicSequence.getFeatures();
             for (int position = 0; position < topics.length; position++) {
+                // > lambda = init as a topical word
                 if (random.nextUniform() > lambda) {
                     int topic = random.nextInt(numTopics);
                     topics[position] = topic;
                     backgroundAndTopicalCounts[sourceId][TOPICAL_WORD_INDEX]++;
 
-                } else {
+                }
+                // < lambda = init as a topical word
+
+                else {
                     topics[position] = backgroundTopic;
                     typeBackgroundCounts[sourceId][tokens.getIndexAtPosition(position)]++;
                     backgroundAndTopicalCounts[sourceId][BACKGROUND_WORD_INDEX]++;
@@ -363,7 +383,9 @@ public class MultiBackgroundTopicModel extends BackgroundTopicModel {
         // restore the numThreads
         numThreads = numConcurrentThread;
     }
-
+    public TreeSet<IDSorter> getSortedBackgroundWordsForSource(Object source){
+        return getSortedBackgroundWords(typeBackgroundCounts[sourceToSourceId.get(source)]);
+    }
     public String displayTopWords (int numWords, boolean usingNewLines) {
 
         StringBuilder out = new StringBuilder();
@@ -586,21 +608,30 @@ public class MultiBackgroundTopicModel extends BackgroundTopicModel {
 
     /** Return a tool for estimating topic distributions for new documents */
     public TopicInferencer getInferencer() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(
+                "please use getInferencer(source) to get inferencer for a particular document source."
+        );
     }
     /** Return a tool for estimating topic distributions for new documents of a specific source */
     public TopicInferencer getInferencer(Object source, double[] alpha) {
-        int sourceId = sourceToSourceId.get(source);
-        return new BackgroundTopicInferencer(
-                typeTopicCounts, tokensPerTopic,
-                typeBackgroundCounts[sourceId], backgroundAndTopicalCounts[sourceId],
-                super.data.get(0).instance.getDataAlphabet(),
-                alpha, beta, betaSum, lambda);
+        if(sourceToSourceId.containsKey(source)) {
+            int sourceId = sourceToSourceId.get(source);
+            return new BackgroundTopicInferencer(
+                    typeTopicCounts, tokensPerTopic,
+                    typeBackgroundCounts[sourceId], backgroundAndTopicalCounts[sourceId],
+                    super.data.get(0).instance.getDataAlphabet(),
+                    alpha, beta, betaSum, lambda);
+        }else{
+            throw new IllegalArgumentException("Source " + source.toString() + " not found");
+        }
     }
     public TopicInferencer getInferencer(Object source) {
         return getInferencer(source, alpha);
     }
 
+    public Set<Object> getSources(){
+        return sourceToSourceId.keySet();
+    }
     public static void main(String[] args){
 
         try {

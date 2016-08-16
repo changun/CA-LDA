@@ -381,7 +381,7 @@ public class BackgroundTopicModel extends ParallelTopicModel {
      *   contains IDSorter objects with integer keys into the alphabet.
      *   To get direct access to the Strings, use getTopWords().
      */
-    public TreeSet<IDSorter> getSortedBackgroundWords (int[] typeBackgroundCounts) {
+    protected TreeSet<IDSorter> getSortedBackgroundWords (int[] typeBackgroundCounts) {
 
         TreeSet<IDSorter> sortedWords = new TreeSet<IDSorter>();
 
