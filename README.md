@@ -4,18 +4,23 @@
 * Trained models are available for download:
   * [200 dimensional](https://s3.amazonaws.com/newsfie/CA_LDA_dim_200.bin.gz)
   * [500 dimensional](https://s3.amazonaws.com/newsfie/CA_LDA_dim_500.bin.gz)
- 
+
+### Input/Output
+* Given a document from one of the context it has been trained on (e.g. Mail, Meetup, Twitter, and News), CA-LDA returns the **K-dimensional topic distribution** of the document along with the proportion of the background words in the document.
+* The returned **K-dimensional topic distribution** can be used to estimate the *similarity* between two documents from different context **with the influence of the context-depandent background words removed.**
+* *Cosine similairty* is recommended similarity metric.
+
 ### Usage
 #### Preprocessing
-* Create preprocessing ```Pipe```. 
-  * The pipe structure needs to be exactly the same as the one used when training the model (See [example](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java#L24).)
+* Create a preprocessing ```Pipe```. 
+  * The pipe structure needs to be exactly the same as the one we used when training the model (See [example](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java#L24).)
 * Put raw documents into an ```InstanceList``` throuhg the pipe (See [example](https://github.com/changun/CA-LDA/blob/master/src/cc/mallet/examples/RunContextAwareLDA.java#L81).)
 
 #### Inference
 * Load the model using ```ObjectStreamInput.readObject()```
 * Call ```model.getInferencer(contextName)``` to get a ```TopicInferencer``` for a specific context.
 * Infer the topic distribution by calling ```inferencer.getSampledDistribution(instance, 100, 1, 5)```.
-* The function returns a ```dobule[]``` of length **K+1** which consists of the distribution of each **K** topic plus the proportion of the background words (which is the last element of the array).
+* The function returns a ```dobule[]``` of length **K+1** which consists of the distribution of each **K** topic plus the proportion of the background words (at the last element of the array).
   * Usually, we discard the background proportion and only use the K-dimentional topic distribution to estimate the document similarity
 
 #### Demo
