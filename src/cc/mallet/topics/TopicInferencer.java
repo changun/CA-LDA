@@ -24,7 +24,7 @@ public class TopicInferencer implements Serializable {
 	protected int[][] typeTopicCounts;
 	protected int[] tokensPerTopic;
 	
-	Alphabet alphabet;
+	public Alphabet alphabet;
 	
 	protected Randoms random = null;
 	
@@ -66,7 +66,10 @@ public class TopicInferencer implements Serializable {
 
 		random = new Randoms();
 	}
-
+	public TopicInferencer copy(){
+		return new TopicInferencer(typeTopicCounts, tokensPerTopic, alphabet,
+		 alpha, beta, betaSum);
+	}
 	public void setRandomSeed(int seed) {
 		random = new Randoms(seed);
 	}
@@ -385,8 +388,77 @@ public class TopicInferencer implements Serializable {
 		for (int topic=0; topic < numTopics; topic++) {
 			result[topic] /= sum;
 		}
-		
-		return result;
+		// Print topic assignment
+        for (int position = 0; position < docLength; position++) {
+            type = tokens.getIndexAtPosition(position);
+            int topic = topics[position];
+
+        }
+
+
+
+        return result;
+	}
+	/**
+	 *  Infer topics for the provided instances and
+	 *   write distributions to the provided file.
+	 *
+	 *  @param instances
+	 *  @param numIterations The total number of iterations of sampling per document
+	 *  @param thinning	  The number of iterations between saved samples
+	 *  @param burnIn		The number of iterations before the first saved sample
+	 *  @param threshold	 The minimum proportion of a given topic that will be written
+	 *  @param max		   The total number of topics to report per document]
+	 */
+	public String printInferredDistributions(Instance instance,
+										   int numIterations, int thinning, int burnIn,
+										   double threshold, int max) throws IOException {
+
+
+
+		IDSorter[] sortedTopics = new IDSorter[ numTopics ];
+		for (int topic = 0; topic < numTopics; topic++) {
+			// Initialize the sorters with dummy values
+			sortedTopics[topic] = new IDSorter(topic, topic);
+		}
+
+		if (max < 0 || max > numTopics) {
+			max = numTopics;
+		}
+
+
+
+		StringBuilder builder = new StringBuilder();
+
+		double[] topicDistribution =
+				getSampledDistribution(instance, numIterations,
+						thinning, burnIn);
+		if (instance.getName() != null) {
+			builder.append(instance.getName());
+		}
+		else {
+			builder.append("no-name");
+		}
+
+		if (threshold > 0.0) {
+			for (int topic = 0; topic < numTopics; topic++) {
+				sortedTopics[topic].set(topic, topicDistribution[topic]);
+			}
+			Arrays.sort(sortedTopics);
+
+			for (int i = 0; i < max; i++) {
+				if (sortedTopics[i].getWeight() < threshold) { break; }
+
+				builder.append("\t" + sortedTopics[i].getID() +
+						"\t" + sortedTopics[i].getWeight());
+			}
+		}
+		else {
+			for (int topic = 0; topic < numTopics; topic++) {
+				builder.append("\t" + topicDistribution[topic]);
+			}
+		}
+		return builder.toString();
 	}
 
 	/**

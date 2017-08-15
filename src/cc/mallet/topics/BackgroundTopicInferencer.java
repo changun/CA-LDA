@@ -4,6 +4,10 @@ import cc.mallet.types.Alphabet;
 import cc.mallet.types.FeatureSequence;
 import cc.mallet.types.Instance;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * Created by Cheng-Kang Hsieh on 9/7/15.
@@ -50,6 +54,7 @@ public class BackgroundTopicInferencer extends TopicInferencer {
 
         return coff;
     }
+
     /**
      *  Use Gibbs sampling to infer a topic distribution.
      *  Topics are initialized to the (or a) most probable topic
@@ -57,12 +62,20 @@ public class BackgroundTopicInferencer extends TopicInferencer {
      *   initial topic distribution.<p/>
      *  This code does not adjust type-topic counts: P(w|t) is clamped.
      */
-    public double[] getSampledDistribution(Instance instance, int numIterations,
+    private class SampleResult{
+        int[] topics;
+        double[] distributions;
+    }
+    private SampleResult sample(Instance instance, int numIterations,
                                            int thinning, int burnIn) {
 
         FeatureSequence tokens = (FeatureSequence) instance.getData();
         int docLength = tokens.size();
         int[] topics = new int[docLength];
+        HashMap<Integer, Integer>[] assignments = new HashMap[docLength];
+        for (int position = 0; position < docLength; position++){
+            assignments[position] = new HashMap<Integer, Integer>();
+        }
 
         int[] localTopicCounts = new int[numTopics];
         int[] localTopicIndex = new int[numTopics];
@@ -352,6 +365,16 @@ public class BackgroundTopicInferencer extends TopicInferencer {
                     topicBetaMass += beta * localTopicCounts[newTopic] /
                             (tokensPerTopic[newTopic] + betaSum);
                 }
+                // record the topic assignments
+                if (iteration > burnIn &&
+                        (iteration - burnIn) % thinning == 0) {
+                    if(!assignments[position].containsKey(newTopic)){
+                        assignments[position].put(newTopic, 1);
+                    }
+                    else{
+                        assignments[position].put(newTopic, assignments[position].get(newTopic)+1);
+                    }
+                }
 
             }
 
@@ -392,8 +415,29 @@ public class BackgroundTopicInferencer extends TopicInferencer {
         for (int topic=0; topic < result.length; topic++) {
             result[topic] /= sum;
         }
-
-        return result;
+        for(i=0; i< docLength; i++){
+            int maxCount = 0;
+            int maxTopic = -2;
+            for(Map.Entry<Integer, Integer> entry: assignments[i].entrySet()){
+                if(entry.getValue() > maxCount){
+                    maxTopic = entry.getKey();
+                    maxCount = entry.getValue();
+                }
+            }
+            topics[i] = maxTopic;
+        }
+        SampleResult ret = new SampleResult();
+        ret.distributions = result;
+        ret.topics = topics;
+        return ret;
+    }
+    public double[] getSampledDistribution(Instance instance, int numIterations,
+                                           int thinning, int burnIn) {
+      return sample(instance, numIterations, thinning, burnIn).distributions;
+    }
+    public int[] getTopicAssignments(Instance instance, int numIterations,
+                                           int thinning, int burnIn) {
+        return sample(instance, numIterations, thinning, burnIn).topics;
     }
 
 }

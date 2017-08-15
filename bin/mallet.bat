@@ -28,6 +28,7 @@ if "%CMD%"=="classify-file" set CLASS=cc.mallet.classify.tui.Csv2Classify
 if "%CMD%"=="classify-svmlight" set CLASS=cc.mallet.classify.tui.SvmLight2Classify
 if "%CMD%"=="train-topics" set CLASS=cc.mallet.topics.tui.TopicTrainer
 if "%CMD%"=="infer-topics" set CLASS=cc.mallet.topics.tui.InferTopics
+if "%CMD%"=="stream-infer-topics" set CLASS=cc.mallet.topics.tui.StreamInferTopic
 if "%CMD%"=="evaluate-topics" set CLASS=cc.mallet.topics.tui.EvaluateTopics
 if "%CMD%"=="prune" set CLASS=cc.mallet.classify.tui.Vectors2Vectors
 if "%CMD%"=="split" set CLASS=cc.mallet.classify.tui.Vectors2Vectors
@@ -47,6 +48,7 @@ echo   classify-file     classify the contents of a directory with a saved class
 echo   classify-svmlight classify data from a single file in SVMLight format
 echo   train-topics      train a topic model from Mallet data files
 echo   infer-topics      use a trained topic model to infer topics for new documents
+echo   stream-infer-topics      use a trained topic model to infer topics for new documents in stream mode
 echo   evaluate-topics   estimate the probability of new documents given a trained model
 echo   prune             remove features based on frequency or information gain
 echo   split             divide data into testing, training, and validation portions

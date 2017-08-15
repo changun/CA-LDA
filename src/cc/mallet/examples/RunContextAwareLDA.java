@@ -1,16 +1,16 @@
 package cc.mallet.examples;
 
 import cc.mallet.pipe.*;
+import cc.mallet.topics.BackgroundTopicInferencer;
 import cc.mallet.topics.MultiBackgroundTopicModel;
 import cc.mallet.topics.TopicInferencer;
-import cc.mallet.types.Alphabet;
-import cc.mallet.types.IDSorter;
-import cc.mallet.types.Instance;
-import cc.mallet.types.InstanceList;
+import cc.mallet.types.*;
+import cc.mallet.util.ArrayUtils;
 import cc.mallet.util.IoUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -28,11 +28,24 @@ public class RunContextAwareLDA {
         alphabet.stopGrowth();
 
         // use the same pipes we used to train the model
+
         pipe.pipes().add(new CharSequenceLowercase());
         pipe.pipes().add(new CharSequence2TokenSequence("\\p{L}\\p{L}\\p{L}+"));
         pipe.pipes().add(new TokenSequence2SnowballStemming());
         pipe.pipes().add(new TokenSequence2FeatureSequence(alphabet));
         return pipe;
+    }
+    private static double[] normalize(double[] dist, int start, int end){
+        double[] ret = new double[end-start];
+        double sum = 0.0;
+        for(int i=start; i<end; i++){
+            sum += dist[i];
+        }
+        for(int i=0; i<end-start; i++){
+            ret[i] = dist[i+start]/sum;
+        }
+        return ret;
+
     }
     private static String iterator2String(Iterator<IDSorter> iterator, Alphabet alphabet){
         StringBuilder out = new StringBuilder();
@@ -80,24 +93,59 @@ public class RunContextAwareLDA {
             Pipe pipe = createPipe(model.getAlphabet());
             InstanceList instances = new InstanceList(pipe);
 
-            String document = IoUtils.contentsAsString(new File(documentPath));
+            String documents = IoUtils.contentsAsString(new File(documentPath));
+            for(String document: documents.split("\n")){
+                instances.addThruPipe(new Instance(document, null, "demo", context));
+            }
+            double[] topicDist = new double[model.getNumTopics()];
+            final HashMap<Object, Integer> backgroundCounts = new HashMap<Object, Integer>();
+            Iterator<Instance> iter = instances.iterator();
 
-            instances.addThruPipe(new Instance(document, null, "demo", context));
 
-            // perform inference
-            final double[] dist = inf.getSampledDistribution(instances.get(0), 100, 1, 5);
+            while(iter.hasNext()) {
+                // perform inference
+                Instance instance = iter.next();
+                FeatureSequence tokens = (FeatureSequence) instance.getData();
+
+                // add topic distribution
+                final double[] dist = inf.getSampledDistribution(instance, 1000, 1, 5);
+                final double[] normalizedDist = normalize(dist, 0, dist.length-1);
+                assert normalizedDist.length == topicDist.length;
+                for(int i=0; i< normalizedDist.length; i++){
+                    topicDist[i] += normalizedDist[i];
+                }
+
+
+                final int[] assignments = ((BackgroundTopicInferencer) inf).getTopicAssignments(instance, 1000, 1, 5);
+
+
+                for (int i = 0; i < tokens.size(); i++) {
+                    Object token = instances.getAlphabet().lookupObject(tokens.getIndexAtPosition(i));
+                    // update background counts
+                    if (assignments[i] == -1) {
+                        if(!backgroundCounts.containsKey(token)){
+                            backgroundCounts.put(token, 1);
+                        }else{
+                            backgroundCounts.put(token, backgroundCounts.get(token)+1);
+                        }
+                    }
+                }
+
+
+            }
+            final double[] finalTopicDist = normalize(topicDist, 0, topicDist.length);
             // create topic index array
-            Integer [] topics = new Integer[dist.length-1];
-            for(int i=0; i<topics.length; i++){
+            Integer[] topics = new Integer[finalTopicDist.length - 1];
+            for (int i = 0; i < topics.length; i++) {
                 topics[i] = i;
             }
 
             // sort topic index array by topic distribution array
-            Arrays.sort(topics, new Comparator<Integer> (){
-            @Override
-            public int compare(Integer i1, Integer i2) {
-                return -Double.compare(dist[i1],dist[i2]);
-            }
+            Arrays.sort(topics, new Comparator<Integer>() {
+                @Override
+                public int compare(Integer i1, Integer i2) {
+                    return -Double.compare(finalTopicDist[i1], finalTopicDist[i2]);
+                }
             });
 
             // output inference results
@@ -105,17 +153,25 @@ public class RunContextAwareLDA {
 
             // print all but the last element, which is the proportion of the background words
             ArrayList<TreeSet<IDSorter>> topicSortedWords = model.getSortedWords();
-            for(Integer topic: topics){
-                System.out.print(String.format("%.3f of Topic %d: ", dist[topic], topic));
+            for (Integer topic : topics) {
+                System.out.print(String.format("%.3f of Topic %d: ", finalTopicDist[topic], topic));
 
                 Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
                 System.out.println(iterator2String(iterator, model.getAlphabet()));
             }
+            Object[] backgroundWords = backgroundCounts.keySet().toArray();
+            Arrays.sort(backgroundWords, new Comparator<Object>() {
+                @Override
+                public int compare(Object i1, Object i2) {
+                    return -Double.compare(backgroundCounts.get(i1), backgroundCounts.get(i2));
+                }
+            });
+            for(Object word: backgroundWords){
+                System.out.println(word +":" + backgroundCounts.get(word));
+            }
 
-            // print the proportion of the background words
-            System.out.print(String.format("\n Background word proportion = %.3f: ", dist[dist.length-1]));
-            Iterator<IDSorter> iterator = model.getSortedBackgroundWordsForSource(context).iterator();
-            System.out.println(iterator2String(iterator, model.getAlphabet()));
+
+
 
 
 
