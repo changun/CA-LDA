@@ -92,6 +92,7 @@ public class StreamInferTopics {
             outputExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    long outputLinesCount = 0;
                     boolean interrupted = false;
                     while(!resultQueue.isEmpty() || !interrupted){
 
@@ -108,19 +109,23 @@ public class StreamInferTopics {
                         while (true) {
                             try {
                                 System.out.println(result.get());
-
+                                outputLinesCount += 1;
                                 break;
                             } catch (InterruptedException e) {
                                 interrupted = true;
                             } catch (ExecutionException e) {
                                 e.printStackTrace();
                                 System.out.println("error");
+                                outputLinesCount += 1;
                                 break;
                             }
 
                         }
                         if (Thread.interrupted()) {
                             interrupted = true;
+                        }
+                        if((outputLinesCount+1) % 10000 == 0){
+                            System.out.flush();
                         }
 
 
