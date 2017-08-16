@@ -36,7 +36,7 @@ public class TopicTrainer {
 	static CommandOption.Boolean directInput = new CommandOption.Boolean(TopicTrainer.class, "direct-input",
 			"BOOLEAN", false, false,
 	"Whether directly get alphabet and instances from System.in. The first line is the number of alphabet. Then is line-separated list of alphabet name. " +
-		"Then, is the number of instances, followed by instances in the svmlight format", null);
+		"Then are the instances in the svmlight format", null);
 	static CommandOption.String inputModelFilename = new CommandOption.String(TopicTrainer.class, "input-model", "FILENAME", true, null,
 		 "The filename from which to read the binary topic model. The --input option is ignored. " +
 		 "By default this is null, indicating that no file will be read.", null);

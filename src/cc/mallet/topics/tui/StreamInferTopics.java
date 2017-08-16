@@ -1,6 +1,5 @@
 package cc.mallet.topics.tui;
 import cc.mallet.topics.TopicInferencer;
-import cc.mallet.types.FeatureSequence;
 import cc.mallet.types.Instance;
 import cc.mallet.util.CommandOption;
 
@@ -8,15 +7,14 @@ import java.io.File;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 /**
+ * A multi-threaded streaming inferencer. It reads SVMLight input from the STDIN and output results to STDOUT.
+ * The STDOUT is by default buffered, but when encounter an empty line, it will "flush" the STDOUT.
  * Created by changun on 8/15/17.
  */
 public class StreamInferTopics {
 
+    public static final String FLUSH_SIGNAL = "";
     static CommandOption.String inferencerFilename = new CommandOption.String
             (StreamInferTopics.class, "inferencer", "FILENAME", true, null,
                     "A serialized topic inferencer from a trained topic model.\n" +
@@ -82,11 +80,6 @@ public class StreamInferTopics {
 
             }
 
-
-
-
-
-
             ExecutorService outputExecutor = Executors.newSingleThreadExecutor();
             final LinkedBlockingQueue<Future<String>> resultQueue = new LinkedBlockingQueue<Future<String>>(1000000);
             outputExecutor.execute(new Runnable() {
@@ -105,17 +98,22 @@ public class StreamInferTopics {
                             continue;
                         }
                         // try to get output result until success or there is an execution exception
-                        String outputLine;
                         while (true) {
                             try {
-                                System.out.println(result.get());
+                                String resultStr = result.get();
+                                if (resultStr.equals(FLUSH_SIGNAL)){
+                                    System.out.flush();
+                                    System.err.println("FLUSH STDOUT");
+                                }else {
+                                    System.out.println(resultStr);
+                                }
                                 outputLinesCount += 1;
                                 break;
                             } catch (InterruptedException e) {
                                 interrupted = true;
                             } catch (ExecutionException e) {
                                 e.printStackTrace();
-                                System.out.println("error");
+                                System.out.println("ERROR");
                                 outputLinesCount += 1;
                                 break;
                             }
@@ -144,13 +142,18 @@ public class StreamInferTopics {
                 Future<String> result = executor.submit(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-                        // assume input is in svmlight format
-                        int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
-                        Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
-                        return inferencers[threadId].printInferredDistributions(instance,
-                                numIterations.value, sampleInterval.value,
-                                burnInIterations.value,
-                                docTopicsThreshold.value, docTopicsMax.value);
+                        // an empty serves as a FLUSH signal
+                        if(line.equals(FLUSH_SIGNAL)){
+                            return FLUSH_SIGNAL;
+                        }else {
+                            // assume input is in svmlight format
+                            int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
+                            Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
+                            return inferencers[threadId].printInferredDistributions(instance,
+                                    numIterations.value, sampleInterval.value,
+                                    burnInIterations.value,
+                                    docTopicsThreshold.value, docTopicsMax.value);
+                        }
                     }
                 });
                 resultQueue.put(result);
