@@ -144,26 +144,30 @@ public class StreamInferTopics {
             Scanner scan = new Scanner(System.in);
 
             while (scan.hasNextLine()) {
-                final String line = scan.nextLine();
-                Future<String> result = executor.submit(new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        // an empty serves as a FLUSH signal
-                        if(line.equals(FLUSH_SIGNAL)){
-                            return FLUSH_SIGNAL;
-                        }else {
-                            // assume input is in svmlight format
-                            int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
-                            Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
-                            return inferencers[threadId].printInferredDistributions(instance,
-                                    numIterations.value, sampleInterval.value,
-                                    burnInIterations.value,
-                                    docTopicsThreshold.value, docTopicsMax.value);
+                try {
+                    final String line = scan.nextLine();
+                    Future<String> result = executor.submit(new Callable<String>() {
+                        @Override
+                        public String call() throws Exception {
+                            // an empty serves as a FLUSH signal
+                            if (line.equals(FLUSH_SIGNAL)) {
+                                return FLUSH_SIGNAL;
+                            } else {
+                                // assume input is in svmlight format
+                                int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
+                                Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
+                                return inferencers[threadId].printInferredDistributions(instance,
+                                        numIterations.value, sampleInterval.value,
+                                        burnInIterations.value,
+                                        docTopicsThreshold.value, docTopicsMax.value);
+                            }
                         }
+                    });
+                    while (!resultQueue.offer(result)) {
+                        Thread.sleep(1);
                     }
-                });
-                while(!resultQueue.offer(result)) {
-                    Thread.sleep(1);
+                }catch (Throwable e){
+                    e.printStackTrace();
                 }
 
 
