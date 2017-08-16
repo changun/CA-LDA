@@ -95,19 +95,36 @@ public class StreamInferTopics {
                     boolean interrupted = false;
                     while(!resultQueue.isEmpty() || !interrupted){
 
+                        Future<String> result;
+                        // try to get a future result
                         try {
-                            Future<String> result = resultQueue.take();
-                            System.out.println(result.get());
+                            result = resultQueue.take();
                         } catch (InterruptedException e) {
                             interrupted = true;
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                            System.out.println("error");
+                            continue;
                         }
-                        if(Thread.interrupted() ){
+                        // try to get output result until success or there is an execution exception
+                        String outputLine;
+                        while (true) {
+                            try {
+                                System.out.println(result.get());
+                                System.out.flush();
+                                break;
+                            } catch (InterruptedException e) {
+                                interrupted = true;
+                            } catch (ExecutionException e) {
+                                e.printStackTrace();
+                                System.out.println("error");
+                                System.out.flush();
+                                break;
+                            }
+
+                        }
+                        if (Thread.interrupted()) {
                             interrupted = true;
                         }
-                        System.out.flush();
+
+
                 }}
             });
 
