@@ -89,8 +89,7 @@ public class StreamInferTopics {
                     boolean interrupted = false;
                     try {
                         while ((!resultQueue.isEmpty()) || (!interrupted)) {
-                            System.err.println("Run");
-                            System.err.println(resultQueue.size());
+
                             Future<String> result;
                             // try to get a future result
                             try {
@@ -102,7 +101,7 @@ public class StreamInferTopics {
                             // try to get output result until success or there is an execution exception
                             while (true) {
                                 try {
-                                    System.err.println("Getting result");
+
                                     String resultStr = result.get();
                                     if (resultStr.equals(FLUSH_SIGNAL)) {
                                         System.out.flush();
@@ -168,9 +167,7 @@ public class StreamInferTopics {
                         }
                     }
                 });
-                while(!resultQueue.offer(result)) {
-                    Thread.sleep(1);
-                }
+                resultQueue.put(result);
 
 
             }
