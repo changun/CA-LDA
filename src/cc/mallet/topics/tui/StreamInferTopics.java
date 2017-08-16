@@ -169,7 +169,7 @@ public class StreamInferTopics {
                         int tokenCount[] = new int[tokenStrings.length-1];
                         int total = 0;
                         for (int i=1; i<tokenStrings.length; i++) {
-                            String[] f_c = tokenStrings[i].split(":", 1);
+                            String[] f_c = tokenStrings[i].split(":", 2);
                             int feature = Integer.valueOf(f_c[0]);
                             int count = Integer.valueOf(f_c[1]);
                             tokenIds[i - 1] = feature;
