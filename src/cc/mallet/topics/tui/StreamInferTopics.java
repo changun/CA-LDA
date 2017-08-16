@@ -89,6 +89,7 @@ public class StreamInferTopics {
                     boolean interrupted = false;
                     while((!resultQueue.isEmpty()) || (!interrupted)){
                         System.err.println("Run");
+                        System.err.println(resultQueue.size());
                         Future<String> result;
                         // try to get a future result
                         try {
