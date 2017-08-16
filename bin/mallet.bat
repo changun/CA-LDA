@@ -28,7 +28,7 @@ if "%CMD%"=="classify-file" set CLASS=cc.mallet.classify.tui.Csv2Classify
 if "%CMD%"=="classify-svmlight" set CLASS=cc.mallet.classify.tui.SvmLight2Classify
 if "%CMD%"=="train-topics" set CLASS=cc.mallet.topics.tui.TopicTrainer
 if "%CMD%"=="infer-topics" set CLASS=cc.mallet.topics.tui.InferTopics
-if "%CMD%"=="stream-infer-topics" set CLASS=cc.mallet.topics.tui.StreamInferTopic
+if "%CMD%"=="stream-infer-topics" set CLASS=cc.mallet.topics.tui.StreamInferTopics
 if "%CMD%"=="evaluate-topics" set CLASS=cc.mallet.topics.tui.EvaluateTopics
 if "%CMD%"=="prune" set CLASS=cc.mallet.classify.tui.Vectors2Vectors
 if "%CMD%"=="split" set CLASS=cc.mallet.classify.tui.Vectors2Vectors

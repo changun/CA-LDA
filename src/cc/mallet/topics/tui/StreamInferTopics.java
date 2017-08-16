@@ -15,50 +15,50 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by changun on 8/15/17.
  */
-public class StreamInferTopic {
+public class StreamInferTopics {
 
     static CommandOption.String inferencerFilename = new CommandOption.String
-            (StreamInferTopic.class, "inferencer", "FILENAME", true, null,
+            (StreamInferTopics.class, "inferencer", "FILENAME", true, null,
                     "A serialized topic inferencer from a trained topic model.\n" +
                             "By default this is null, indicating that no file will be read.", null);
 
 
     static CommandOption.Double docTopicsThreshold = new CommandOption.Double
-            (StreamInferTopic.class, "doc-topics-threshold", "DECIMAL", true, 0.0,
+            (StreamInferTopics.class, "doc-topics-threshold", "DECIMAL", true, 0.0,
                     "When writing topic proportions per document with --output-doc-topics, " +
                             "do not print topics with proportions less than this threshold value.", null);
 
     static CommandOption.Integer docTopicsMax = new CommandOption.Integer
-            (StreamInferTopic.class, "doc-topics-max", "INTEGER", true, -1,
+            (StreamInferTopics.class, "doc-topics-max", "INTEGER", true, -1,
                     "When writing topic proportions per document with --output-doc-topics, " +
                             "do not print more than INTEGER number of topics.  "+
                             "A negative value indicates that all topics should be printed.", null);
     static CommandOption.Integer numOfThreads = new CommandOption.Integer
-            (StreamInferTopic.class, "num-threads", "INTEGER", true, 1,
+            (StreamInferTopics.class, "num-threads", "INTEGER", true, 1,
                     "number of threads", null);
 
     static CommandOption.Integer numIterations = new CommandOption.Integer
-            (StreamInferTopic.class, "num-iterations", "INTEGER", true, 100,
+            (StreamInferTopics.class, "num-iterations", "INTEGER", true, 100,
                     "The number of iterations of Gibbs sampling.", null);
 
     static CommandOption.Integer sampleInterval = new CommandOption.Integer
-            (StreamInferTopic.class, "sample-interval", "INTEGER", true, 10,
+            (StreamInferTopics.class, "sample-interval", "INTEGER", true, 10,
                     "The number of iterations between saved samples.", null);
 
     static CommandOption.Integer burnInIterations = new CommandOption.Integer
-            (StreamInferTopic.class, "burn-in", "INTEGER", true, 10,
+            (StreamInferTopics.class, "burn-in", "INTEGER", true, 10,
                     "The number of iterations before the first sample is saved.", null);
 
     static CommandOption.Integer randomSeed = new CommandOption.Integer
-            (StreamInferTopic.class, "random-seed", "INTEGER", true, 0,
+            (StreamInferTopics.class, "random-seed", "INTEGER", true, 0,
                     "The random seed for the Gibbs sampler.  Default is 0, which will use the clock.", null);
 
     public static void main (String[] args) {
 
         // Process the command-line options
-        CommandOption.setSummary (StreamInferTopic.class,
+        CommandOption.setSummary (StreamInferTopics.class,
                 "Use an existing topic model to infer topic distributions for new documents in a stream mode");
-        CommandOption.process (StreamInferTopic.class, args);
+        CommandOption.process (StreamInferTopics.class, args);
 
 
 
