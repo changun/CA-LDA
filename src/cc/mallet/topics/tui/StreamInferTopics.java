@@ -87,49 +87,53 @@ public class StreamInferTopics {
                 public void run() {
                     long outputLinesCount = 0;
                     boolean interrupted = false;
-                    while((!resultQueue.isEmpty()) || (!interrupted)){
-                        System.err.println("Run");
-                        System.err.println(resultQueue.size());
-                        Future<String> result;
-                        // try to get a future result
-                        try {
-                            result = resultQueue.take();
-                        } catch (InterruptedException e) {
-                            interrupted = true;
-                            continue;
-                        }
-                        // try to get output result until success or there is an execution exception
-                        while (true) {
+                    try {
+                        while ((!resultQueue.isEmpty()) || (!interrupted)) {
+                            System.err.println("Run");
+                            System.err.println(resultQueue.size());
+                            Future<String> result;
+                            // try to get a future result
                             try {
-                                String resultStr = result.get();
-                                if (resultStr.equals(FLUSH_SIGNAL)){
-                                    System.out.flush();
-                                    System.err.println("FLUSH STDOUT");
-                                }else {
-                                    System.out.println(resultStr);
-                                }
-                                outputLinesCount += 1;
-                                break;
+                                result = resultQueue.take();
                             } catch (InterruptedException e) {
                                 interrupted = true;
-                            } catch (ExecutionException e) {
-                                e.printStackTrace();
-                                System.out.println("ERROR");
-                                outputLinesCount += 1;
-                                break;
+                                continue;
+                            }
+                            // try to get output result until success or there is an execution exception
+                            while (true) {
+                                try {
+                                    String resultStr = result.get();
+                                    if (resultStr.equals(FLUSH_SIGNAL)) {
+                                        System.out.flush();
+                                        System.err.println("FLUSH STDOUT");
+                                    } else {
+                                        System.out.println(resultStr);
+                                    }
+                                    outputLinesCount += 1;
+                                    break;
+                                } catch (InterruptedException e) {
+                                    interrupted = true;
+                                } catch (ExecutionException e) {
+                                    e.printStackTrace();
+                                    System.out.println("ERROR");
+                                    outputLinesCount += 1;
+                                    break;
+                                }
+
+                            }
+                            if (Thread.interrupted()) {
+                                interrupted = true;
+                            }
+                            if ((outputLinesCount + 1) % 10000 == 0) {
+                                System.out.flush();
                             }
 
-                        }
-                        if (Thread.interrupted()) {
-                            interrupted = true;
-                        }
-                        if((outputLinesCount+1) % 10000 == 0){
-                            System.out.flush();
-                        }
 
-
-                }
-                System.out.flush();
+                        }
+                        System.out.flush();
+                    }catch (Throwable e){
+                        e.printStackTrace();
+                    }
                 }
             });
 
