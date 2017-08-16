@@ -88,7 +88,7 @@ public class StreamInferTopics {
 
 
             ExecutorService outputExecutor = Executors.newSingleThreadExecutor();
-            final LinkedBlockingQueue<Future<String>> resultQueue = new LinkedBlockingQueue<Future<String>>(10000);
+            final LinkedBlockingQueue<Future<String>> resultQueue = new LinkedBlockingQueue<Future<String>>(1000000);
             outputExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -108,14 +108,13 @@ public class StreamInferTopics {
                         while (true) {
                             try {
                                 System.out.println(result.get());
-                                System.out.flush();
+
                                 break;
                             } catch (InterruptedException e) {
                                 interrupted = true;
                             } catch (ExecutionException e) {
                                 e.printStackTrace();
                                 System.out.println("error");
-                                System.out.flush();
                                 break;
                             }
 
@@ -125,10 +124,12 @@ public class StreamInferTopics {
                         }
 
 
-                }}
+                }
+                System.out.flush();
+                }
             });
 
-            BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(10000);
+            BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(1000000);
 
             ThreadPoolExecutor executor = new ThreadPoolExecutor(numOfThreads.value + 1,
                     numOfThreads.value + 1, 5000, TimeUnit.MILLISECONDS, blockingQueue);
@@ -168,7 +169,7 @@ public class StreamInferTopics {
                         int tokenCount[] = new int[tokenStrings.length-1];
                         int total = 0;
                         for (int i=1; i<tokenStrings.length; i++) {
-                            String[] f_c = tokenStrings[i].split(":");
+                            String[] f_c = tokenStrings[i].split(":", 1);
                             int feature = Integer.valueOf(f_c[0]);
                             int count = Integer.valueOf(f_c[1]);
                             tokenIds[i - 1] = feature;
