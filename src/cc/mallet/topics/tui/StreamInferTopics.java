@@ -102,6 +102,7 @@ public class StreamInferTopics {
                             // try to get output result until success or there is an execution exception
                             while (true) {
                                 try {
+                                    System.err.println("Getting result");
                                     String resultStr = result.get();
                                     if (resultStr.equals(FLUSH_SIGNAL)) {
                                         System.out.flush();
