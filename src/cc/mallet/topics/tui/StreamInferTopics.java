@@ -104,6 +104,9 @@ public class StreamInferTopics {
                             e.printStackTrace();
                             System.out.println("error");
                         }
+                        if(Thread.interrupted() ){
+                            interrupted = true;
+                        }
                         System.out.flush();
                 }}
             });
@@ -173,7 +176,9 @@ public class StreamInferTopics {
 
             }
             executor.shutdown();
-            outputExecutor.shutdown();
+            System.err.println("Inference executor down");
+            outputExecutor.shutdownNow();
+            System.err.println("Output down");
 
         } catch (Exception e) {
             e.printStackTrace();
