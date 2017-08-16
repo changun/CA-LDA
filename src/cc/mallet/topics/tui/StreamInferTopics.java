@@ -144,11 +144,12 @@ public class StreamInferTopics {
             Scanner scan = new Scanner(System.in);
 
             while (scan.hasNextLine()) {
-                try {
-                    final String line = scan.nextLine();
-                    Future<String> result = executor.submit(new Callable<String>() {
-                        @Override
-                        public String call() throws Exception {
+
+                final String line = scan.nextLine();
+                Future<String> result = executor.submit(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        try {
                             // an empty serves as a FLUSH signal
                             if (line.equals(FLUSH_SIGNAL)) {
                                 return FLUSH_SIGNAL;
@@ -161,13 +162,14 @@ public class StreamInferTopics {
                                         burnInIterations.value,
                                         docTopicsThreshold.value, docTopicsMax.value);
                             }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            throw e;
                         }
-                    });
-                    while (!resultQueue.offer(result)) {
-                        Thread.sleep(1);
                     }
-                }catch (Throwable e){
-                    e.printStackTrace();
+                });
+                while(!resultQueue.offer(result)) {
+                    Thread.sleep(1);
                 }
 
 
