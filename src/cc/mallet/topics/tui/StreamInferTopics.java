@@ -81,13 +81,13 @@ public class StreamInferTopics {
             }
 
             ExecutorService outputExecutor = Executors.newSingleThreadExecutor();
-            final LinkedBlockingQueue<Future<String>> resultQueue = new LinkedBlockingQueue<Future<String>>(1000000);
+            final LinkedBlockingQueue<Future<String>> resultQueue = new LinkedBlockingQueue<Future<String>>(100000);
             outputExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     long outputLinesCount = 0;
                     boolean interrupted = false;
-                    while(!resultQueue.isEmpty() || !interrupted){
+                    while((!resultQueue.isEmpty()) || (!interrupted)){
 
                         Future<String> result;
                         // try to get a future result
@@ -156,7 +156,9 @@ public class StreamInferTopics {
                         }
                     }
                 });
-                resultQueue.put(result);
+                while(!resultQueue.offer(result)) {
+                    Thread.sleep(1);
+                }
 
 
             }
