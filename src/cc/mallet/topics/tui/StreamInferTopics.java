@@ -129,30 +129,11 @@ public class StreamInferTopics {
                 }
             });
 
-            BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<Runnable>(1000000);
+            ExecutorService executor = Executors.newFixedThreadPool(numOfThreads.value);
 
-            ThreadPoolExecutor executor = new ThreadPoolExecutor(numOfThreads.value + 1,
-                    numOfThreads.value + 1, 5000, TimeUnit.MILLISECONDS, blockingQueue);
-            executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
-                @Override
-                public void rejectedExecution(Runnable r,
-                                              ThreadPoolExecutor executor) {
-
-                    System.err.println("Waiting for a second !!");
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    executor.execute(r);
-                }
-            });
-
-
-            // Let start all core threads initially
-            executor.prestartAllCoreThreads();
 
             Scanner scan = new Scanner(System.in);
+
             while (scan.hasNextLine()) {
                 final String line = scan.nextLine();
                 Future<String> result = executor.submit(new Callable<String>() {
