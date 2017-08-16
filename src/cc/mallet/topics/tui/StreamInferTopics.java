@@ -146,30 +146,8 @@ public class StreamInferTopics {
                     public String call() throws Exception {
                         // assume input is in svmlight format
                         int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
-                        String[] tokenStrings = line.split(" ");
-                        // the first element is the name of the input
-                        String name = tokenStrings[0];
-                        // the id of each feature
-                        int tokenIds[] = new int[tokenStrings.length-1];
-                        // the occurrence count of each feature
-                        int tokenCount[] = new int[tokenStrings.length-1];
-                        int total = 0;
-                        for (int i=1; i<tokenStrings.length; i++) {
-                            String[] f_c = tokenStrings[i].split(":", 2);
-                            int feature = Integer.valueOf(f_c[0]);
-                            int count = Integer.valueOf(f_c[1]);
-                            tokenIds[i - 1] = feature;
-                            tokenCount[i - 1] = count;
-                            total += count;
-                        }
-                        int tokens[] = new int[total];
-                        for (int i=0, index=0; i<tokenCount.length; i++) {
-                            for(int j=0; j<tokenCount[i]; j++, index++){
-                                tokens[index]= tokenIds[i];
-                            }
-                        }
-                        Instance inst = new Instance(new FeatureSequence(inferencers[0].alphabet, tokens), null, name, null);
-                        return inferencers[threadId].printInferredDistributions(inst,
+                        Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
+                        return inferencers[threadId].printInferredDistributions(instance,
                                 numIterations.value, sampleInterval.value,
                                 burnInIterations.value,
                                 docTopicsThreshold.value, docTopicsMax.value);

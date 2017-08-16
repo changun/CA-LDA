@@ -7,6 +7,8 @@
 
 package cc.mallet.topics.tui;
 
+import cc.mallet.types.Alphabet;
+import cc.mallet.types.Instance;
 import cc.mallet.util.CommandOption;
 import cc.mallet.util.MalletLogger;
 import cc.mallet.types.InstanceList;
@@ -14,6 +16,8 @@ import cc.mallet.types.FeatureSequence;
 import cc.mallet.topics.*;
 import cc.mallet.pipe.iterator.DBInstanceIterator;
 
+import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.logging.*;
 import java.io.*;
 
@@ -28,6 +32,10 @@ public class TopicTrainer {
 		 "The filename from which to read the list of training instances.  Use - for stdin.  " +
 		 "The instances must be FeatureSequence or FeatureSequenceWithBigrams, not FeatureVector", null);
 
+	static CommandOption.Boolean directInput = new CommandOption.Boolean(TopicTrainer.class, "direct-input",
+			"BOOLEAN", false, false,
+	"Whether directly get alphabet and instances from System.in. The first line is the number of alphabet. Then is line-separated list of alphabet name. " +
+		"Then, is the number of instances, followed by instances in the svmlight format", null);
 	static CommandOption.String inputModelFilename = new CommandOption.String(TopicTrainer.class, "input-model", "FILENAME", true, null,
 		 "The filename from which to read the binary topic model. The --input option is ignored. " +
 		 "By default this is null, indicating that no file will be read.", null);
@@ -188,8 +196,26 @@ public class TopicTrainer {
 		if (randomSeed.value != 0) {
 			topicModel.setRandomSeed(randomSeed.value);
 		}
+		if (directInput.value){
+			Scanner scan = new Scanner(System.in);
 
-		if (inputFile.value != null) {
+			int alphabetSize = scan.nextInt();
+			scan.nextLine();
+			Alphabet alphabet = new Alphabet(alphabetSize);
+			for(int i=0; i<alphabetSize; i++){
+				alphabet.lookupIndex(scan.nextLine());
+			}
+			// get instances
+			int numInstances = scan.nextInt();
+			scan.nextLine();
+			InstanceList instances = new InstanceList(alphabet, null);
+			for(int i=0; i<numInstances; i++){
+				instances.add(SVMLightReader.parseLine(scan.nextLine(), alphabet));
+			}
+			topicModel.addInstances(instances);
+
+		}
+		else if (inputFile.value != null) {
 			InstanceList training = null;
 			try {
 				if (inputFile.value.startsWith("db:")) {
