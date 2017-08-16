@@ -210,7 +210,10 @@ public class TopicTrainer {
 			scan.nextLine();
 			InstanceList instances = new InstanceList(alphabet, null);
 			for(int i=0; i<numInstances; i++){
-				instances.add(SVMLightReader.parseLine(scan.nextLine(), alphabet));
+				String line = scan.nextLine();
+				System.err.println(line);
+				System.err.println(i);
+				instances.add(SVMLightReader.parseLine(line, alphabet));
 			}
 			topicModel.addInstances(instances);
 
