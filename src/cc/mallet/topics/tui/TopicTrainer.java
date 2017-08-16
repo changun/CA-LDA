@@ -17,6 +17,7 @@ import cc.mallet.topics.*;
 import cc.mallet.pipe.iterator.DBInstanceIterator;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.logging.*;
 import java.io.*;
@@ -206,14 +207,15 @@ public class TopicTrainer {
 				alphabet.lookupIndex(scan.nextLine());
 			}
 			// get instances
-			int numInstances = scan.nextInt();
-			scan.nextLine();
 			InstanceList instances = new InstanceList(alphabet, null);
-			for(int i=0; i<numInstances; i++){
-				String line = scan.nextLine();
-				System.err.println(line);
-				System.err.println(i);
-				instances.add(SVMLightReader.parseLine(line, alphabet));
+			while(true){
+				try {
+					String line = scan.nextLine();
+					instances.add(SVMLightReader.parseLine(line, alphabet));
+				}catch (NoSuchElementException e){
+					break;
+				}
+
 			}
 			topicModel.addInstances(instances);
 
