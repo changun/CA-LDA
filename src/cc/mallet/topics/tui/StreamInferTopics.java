@@ -4,6 +4,8 @@ import cc.mallet.types.Instance;
 import cc.mallet.util.CommandOption;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -50,6 +52,9 @@ public class StreamInferTopics {
     static CommandOption.Integer randomSeed = new CommandOption.Integer
             (StreamInferTopics.class, "random-seed", "INTEGER", true, 0,
                     "The random seed for the Gibbs sampler.  Default is 0, which will use the clock.", null);
+    static CommandOption.String topicWordWeightsFile = new CommandOption.String(StreamInferTopics.class, "topic-word-weights-file", "FILENAME", true, null,
+            "The filename in which to write unnormalized weights for every topic and word type.  " +
+                    "By default this is null, indicating that no file will be written.", null);
 
     public static void main (String[] args) {
 
@@ -72,6 +77,13 @@ public class StreamInferTopics {
             final TopicInferencer[] inferencers = new TopicInferencer[numOfThreads.value];
             inferencers[0] =
                     TopicInferencer.read(new File(inferencerFilename.value));
+
+            if (topicWordWeightsFile.value != null) {
+                PrintWriter out = new PrintWriter (new FileWriter(new File (topicWordWeightsFile.value)) );
+                inferencers[0].printTopicWordWeights(out);
+                out.close();
+            }
+
             if (randomSeed.value != 0) {
                 inferencers[0].setRandomSeed(randomSeed.value);
             }

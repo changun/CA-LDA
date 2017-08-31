@@ -34,7 +34,8 @@ import cc.mallet.types.LabelAlphabet;
  * @author Gregory Druck
  *
  */
-public class SvmLight2FeatureVectorAndLabel extends Pipe {
+public class
+SvmLight2FeatureVectorAndLabel extends Pipe {
 
   private static final long serialVersionUID = 1L;
   

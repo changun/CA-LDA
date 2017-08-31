@@ -74,6 +74,40 @@ public class TopicInferencer implements Serializable {
 		random = new Randoms(seed);
 	}
 
+	/**
+	 * Print an unnormalized weight for every word in every topic.
+	 *  Most of these will be equal to the smoothing parameter beta.
+	 */
+	public void printTopicWordWeights(PrintWriter out) throws IOException {
+		// Probably not the most efficient way to do this...
+
+		for (int topic = 0; topic < numTopics; topic++) {
+			for (int type = 0; type < numTypes; type++) {
+
+				int[] topicCounts = typeTopicCounts[type];
+
+				double weight = beta;
+
+				int index = 0;
+				while (index < topicCounts.length &&
+						topicCounts[index] > 0) {
+
+					int currentTopic = topicCounts[index] & topicMask;
+
+
+					if (currentTopic == topic) {
+						weight += topicCounts[index] >> topicBits;
+						break;
+					}
+
+					index++;
+				}
+
+				out.println(topic + "\t" + String.valueOf(type) + "\t" + weight);
+
+			}
+		}
+	}
 	/** 
 	 *  Use Gibbs sampling to infer a topic distribution.
 	 *  Topics are initialized to the (or a) most probable topic
@@ -403,7 +437,7 @@ public class TopicInferencer implements Serializable {
 	 *  Infer topics for the provided instances and
 	 *   write distributions to the provided file.
 	 *
-	 *  @param instances
+	 *  @param instance
 	 *  @param numIterations The total number of iterations of sampling per document
 	 *  @param thinning	  The number of iterations between saved samples
 	 *  @param burnIn		The number of iterations before the first saved sample
