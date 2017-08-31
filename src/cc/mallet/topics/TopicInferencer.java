@@ -76,7 +76,7 @@ public class TopicInferencer implements Serializable {
 
 	/**
 	 * Print an unnormalized weight for every word in every topic.
-	 *  Most of these will be equal to the smoothing parameter beta.
+	 *  Note that this implementation does not include the smoothing parameter beta and only output non-zero weights
 	 */
 	public void printTopicWordWeights(PrintWriter out) throws IOException {
 		// Probably not the most efficient way to do this...
@@ -86,7 +86,7 @@ public class TopicInferencer implements Serializable {
 
 				int[] topicCounts = typeTopicCounts[type];
 
-				double weight = beta;
+				int weight = 0;
 
 				int index = 0;
 				while (index < topicCounts.length &&
@@ -102,8 +102,9 @@ public class TopicInferencer implements Serializable {
 
 					index++;
 				}
-
-				out.println(topic + "\t" + String.valueOf(type) + "\t" + weight);
+				if(weight > 0) {
+					out.println(topic + "\t" + String.valueOf(type) + "\t" + weight);
+				}
 
 			}
 		}
