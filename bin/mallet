@@ -4,7 +4,7 @@
 malletdir=`dirname $0`
 malletdir=`dirname $malletdir`
 
-cp=$malletdir/class:$malletdir/lib/mallet-deps.jar:$CLASSPATH
+cp=$malletdir/class:$malletdir/target/classes:$malletdir/lib/mallet-deps.jar:$CLASSPATH
 #echo $cp
 # Do not set xmx here
 #MEMORY=1g
