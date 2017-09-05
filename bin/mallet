@@ -6,8 +6,8 @@ malletdir=`dirname $malletdir`
 
 cp=$malletdir/class:$malletdir/lib/mallet-deps.jar:$CLASSPATH
 #echo $cp
-
-MEMORY=1g
+# Do not set xmx here
+#MEMORY=1g
 
 CMD=$1
 shift
@@ -59,4 +59,7 @@ case $CMD in
 	*) echo "Unrecognized command: $CMD"; help; exit 1;;
 esac
 
-java -Xmx$MEMORY -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -classpath "$cp" $CLASS "$@"
+# do not set -Xmx
+#-Xmx$MEMORY
+
+java -ea -Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -classpath "$cp" $CLASS "$@"
