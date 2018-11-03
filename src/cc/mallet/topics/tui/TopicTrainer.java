@@ -37,6 +37,10 @@ public class TopicTrainer {
 			"BOOLEAN", false, false,
 	"Whether directly get alphabet and instances from System.in. The first line is the number of alphabet. Then is line-separated list of alphabet name. " +
 		"Then are the instances in the svmlight format", null);
+	static CommandOption.Boolean useBackgroundTopic = new CommandOption.Boolean(TopicTrainer.class, "use-background-topic",
+			"BOOLEAN", false, false,
+			"whether to estimate a background topic that will consume the high frequency and low information words"
+			, null);
 	static CommandOption.String inputModelFilename = new CommandOption.String(TopicTrainer.class, "input-model", "FILENAME", true, null,
 		 "The filename from which to read the binary topic model. The --input option is ignored. " +
 		 "By default this is null, indicating that no file will be read.", null);
@@ -164,6 +168,13 @@ public class TopicTrainer {
 	static CommandOption.Double beta = new CommandOption.Double(TopicTrainer.class, "beta", "DECIMAL", true, 0.01,
 		 "Beta parameter: smoothing parameter for each topic-word. beta_w = [this value]",null);
 
+
+	static CommandOption.Double betaBackground = new CommandOption.Double(TopicTrainer.class, "beta-background", "DECIMAL", true, 0.1,
+			"Beta parameter for background topic: smoothing parameter for each topic-word. beta_w = [this value]",null);
+
+	static CommandOption.Double lambda = new CommandOption.Double(TopicTrainer.class, "lambda", "DECIMAL", true, 0.9,
+			"the prior probability of a word being a background topic",null);
+
 	private static Logger logger = MalletLogger.getLogger(TopicTrainer.class.getName());
 
 	public static void main (String[] args) throws java.io.IOException {
@@ -183,6 +194,7 @@ public class TopicTrainer {
 		
 		if (inputModelFilename.value != null) {
 			try {
+
 				topicModel = ParallelTopicModel.read(new File(inputModelFilename.value));
 			} catch (Exception e) {
 				logger.warning("Unable to restore saved topic model " + 
@@ -191,7 +203,12 @@ public class TopicTrainer {
 			}
 		} 
 		else {
-			topicModel = new ParallelTopicModel (numTopics.value, alpha.value, beta.value);
+			if(useBackgroundTopic.value) {
+				topicModel = new BackgroundTopicModel(numTopics.value, alpha.value, beta.value, betaBackground.value, lambda.value);
+			}
+			else {
+				topicModel = new ParallelTopicModel(numTopics.value, alpha.value, beta.value);
+			}
 		}
 
 		if (randomSeed.value != 0) {
@@ -211,6 +228,9 @@ public class TopicTrainer {
 			while(true){
 				try {
 					String line = scan.nextLine();
+					if(line.equals("")){
+						break;
+					}
 					instances.add(SVMLightReader.parseLine(line, alphabet));
 				}catch (NoSuchElementException e){
 					break;

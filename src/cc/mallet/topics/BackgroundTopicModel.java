@@ -341,7 +341,8 @@ public class BackgroundTopicModel extends ParallelTopicModel {
         logger.info(timeReport.toString());
     }
     public double modelLogLikelihood() {
-        throw new UnsupportedOperationException();
+        return super.modelLogLikelihood();
+        //throw new UnsupportedOperationException();
     }
 
     /** Get the smoothed distribution over topics for a topic sequence,

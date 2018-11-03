@@ -22,6 +22,7 @@ public class BackgroundTopicInferencer extends TopicInferencer {
     public int backgroundTopic = ParallelTopicModel.UNASSIGNED_TOPIC;
 
     double lambda;
+    double betaBackground;
     double alphaSum;
     // the constant part in the background work coefficient which we cache for efficiency
     double backgroundCoeffConst;
@@ -34,10 +35,15 @@ public class BackgroundTopicInferencer extends TopicInferencer {
         this.backgroundAndTopicalCounts = backgroundAndTopicalCounts;
         this.lambda = lambda;
         this.alphaSum = 0.0;
+        this.betaBackground = betaBackground;
         this.backgroundCoeffConst = 1.0 / ((betaBackground * numTypes) + backgroundAndTopicalCounts[BACKGROUND_WORD_INDEX] );
         for(double a: alpha){
             alphaSum += a;
         }
+    }
+    public BackgroundTopicInferencer copy(){
+        return new BackgroundTopicInferencer(typeTopicCounts, tokensPerTopic,typeBackgroundCounts, backgroundAndTopicalCounts, alphabet,
+                alpha, beta, betaBackground, betaSum, lambda);
     }
     public BackgroundTopicInferencer(int[][] typeTopicCounts, int[] tokensPerTopic,
                                      int[] typeBackgroundCounts, int[] backgroundAndTopicalCounts,
@@ -62,10 +68,7 @@ public class BackgroundTopicInferencer extends TopicInferencer {
      *   initial topic distribution.<p/>
      *  This code does not adjust type-topic counts: P(w|t) is clamped.
      */
-    private class SampleResult{
-        int[] topics;
-        double[] distributions;
-    }
+
     private SampleResult sample(Instance instance, int numIterations,
                                            int thinning, int burnIn) {
 
@@ -410,7 +413,6 @@ public class BackgroundTopicInferencer extends TopicInferencer {
             result[numTopics] += localBackgroundTopicCount[BACKGROUND_WORD_INDEX];
             sum += result[numTopics];
         }
-
         // Normalize
         for (int topic=0; topic < result.length; topic++) {
             result[topic] /= sum;
@@ -431,13 +433,6 @@ public class BackgroundTopicInferencer extends TopicInferencer {
         ret.topics = topics;
         return ret;
     }
-    public double[] getSampledDistribution(Instance instance, int numIterations,
-                                           int thinning, int burnIn) {
-      return sample(instance, numIterations, thinning, burnIn).distributions;
-    }
-    public int[] getTopicAssignments(Instance instance, int numIterations,
-                                           int thinning, int burnIn) {
-        return sample(instance, numIterations, thinning, burnIn).topics;
-    }
+
 
 }

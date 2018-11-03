@@ -1516,7 +1516,9 @@ public class ParallelTopicModel implements Serializable {
 
 			// Count up the tokens
 			for (int token=0; token < docLen; token++) {
-				topicCounts[ currentDocTopics[token] ]++;
+				if(currentDocTopics[token] >= 0) {
+					topicCounts[currentDocTopics[token]]++;
+				}
 			}
 
 			// And normalize
@@ -1862,7 +1864,9 @@ public class ParallelTopicModel implements Serializable {
 			docTopics = topicSequence.getFeatures();
 
 			for (int token=0; token < docTopics.length; token++) {
-				topicCounts[ docTopics[token] ]++;
+				if(docTopics[token] > 0) {
+					topicCounts[docTopics[token]]++;
+				}
 			}
 
 			for (int topic=0; topic < numTopics; topic++) {

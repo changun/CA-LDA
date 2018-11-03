@@ -21,6 +21,9 @@ public class StreamInferTopics {
             (StreamInferTopics.class, "inferencer", "FILENAME", true, null,
                     "A serialized topic inferencer from a trained topic model.\n" +
                             "By default this is null, indicating that no file will be read.", null);
+    static CommandOption.Boolean printAssignment = new CommandOption.Boolean
+            (StreamInferTopics.class, "print-assignment", "BOOLEAN", true, false,
+"weather to output topic assignments instead", null);
 
 
     static CommandOption.Double docTopicsThreshold = new CommandOption.Double
@@ -168,10 +171,17 @@ public class StreamInferTopics {
                                 // assume input is in svmlight format
                                 int threadId = (int) (Thread.currentThread().getId() % numOfThreads.value);
                                 Instance instance = SVMLightReader.parseLine(line, inferencers[0].alphabet);
-                                return inferencers[threadId].printInferredDistributions(instance,
-                                        numIterations.value, sampleInterval.value,
-                                        burnInIterations.value,
-                                        docTopicsThreshold.value, docTopicsMax.value);
+                                if (printAssignment.value){
+                                    return inferencers[threadId].printTopicAssignments(instance,
+                                            numIterations.value, sampleInterval.value,
+                                            burnInIterations.value,
+                                            docTopicsThreshold.value, docTopicsMax.value);
+                                }else {
+                                    return inferencers[threadId].printInferredDistributions(instance,
+                                            numIterations.value, sampleInterval.value,
+                                            burnInIterations.value,
+                                            docTopicsThreshold.value, docTopicsMax.value);
+                                }
                             }
                         }catch (Exception e){
                             e.printStackTrace();

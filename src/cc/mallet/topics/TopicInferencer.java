@@ -109,14 +109,26 @@ public class TopicInferencer implements Serializable {
 			}
 		}
 	}
-	/** 
-	 *  Use Gibbs sampling to infer a topic distribution.
-	 *  Topics are initialized to the (or a) most probable topic
-	 *   for each token. Using zero iterations returns exactly this
-	 *   initial topic distribution.<p/>
-	 *  This code does not adjust type-topic counts: P(w|t) is clamped.
-	 */
+	class SampleResult{
+		int[] topics;
+		double[] distributions;
+	}
 	public double[] getSampledDistribution(Instance instance, int numIterations,
+										   int thinning, int burnIn) {
+		return sample(instance, numIterations, thinning, burnIn).distributions;
+	}
+	public int[] getTopicAssignments(Instance instance, int numIterations,
+									 int thinning, int burnIn) {
+		return sample(instance, numIterations, thinning, burnIn).topics;
+	}
+		/**
+         *  Use Gibbs sampling to infer a topic distribution.
+         *  Topics are initialized to the (or a) most probable topic
+         *   for each token. Using zero iterations returns exactly this
+         *   initial topic distribution.<p/>
+         *  This code does not adjust type-topic counts: P(w|t) is clamped.
+         */
+	private SampleResult sample(Instance instance, int numIterations,
 										   int thinning, int burnIn) {
 
 		FeatureSequence tokens = (FeatureSequence) instance.getData();
@@ -423,16 +435,13 @@ public class TopicInferencer implements Serializable {
 		for (int topic=0; topic < numTopics; topic++) {
 			result[topic] /= sum;
 		}
-		// Print topic assignment
-        for (int position = 0; position < docLength; position++) {
-            type = tokens.getIndexAtPosition(position);
-            int topic = topics[position];
-
-        }
 
 
+		SampleResult ret = new SampleResult();
+		ret.distributions = result;
+		ret.topics = topics;
 
-        return result;
+        return ret;
 	}
 	/**
 	 *  Infer topics for the provided instances and
@@ -495,7 +504,30 @@ public class TopicInferencer implements Serializable {
 		}
 		return builder.toString();
 	}
+	public String printTopicAssignments(Instance instance,
+											 int numIterations, int thinning, int burnIn,
+											 double threshold, int max) throws IOException {
 
+		int[] topics =
+				getTopicAssignments(instance, numIterations,
+						thinning, burnIn);
+
+		StringBuilder builder = new StringBuilder();
+
+
+		if (instance.getName() != null) {
+			builder.append(instance.getName());
+		}
+		else {
+			builder.append("no-name");
+		}
+
+		for (int index = 0; index < topics.length; index++) {
+			builder.append("\t");
+			builder.append(topics[index]);
+		}
+		return builder.toString();
+	}
 	/**
 	 *  Infer topics for the provided instances and
 	 *   write distributions to the provided file.
